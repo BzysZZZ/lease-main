@@ -1,0 +1,20 @@
+package com.qianlou.admin.service.impl;
+
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.qianlou.admin.mapper.BrowsingHistoryMapper;
+import com.qianlou.admin.service.BrowsingHistoryService;
+import com.qianlou.model.entity.BrowsingHistory;
+import org.springframework.stereotype.Service;
+
+/**
+* @description 针对表【browsing_history(浏览历史)】的数据库操作Service实现
+*/
+@Service
+public class BrowsingHistoryServiceImpl extends ServiceImpl<BrowsingHistoryMapper, BrowsingHistory>
+    implements BrowsingHistoryService {
+
+}
+
+
+
+
