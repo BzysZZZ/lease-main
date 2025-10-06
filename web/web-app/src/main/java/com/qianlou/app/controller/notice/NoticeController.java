@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/app/notice")
 public class NoticeController {
 
-    @Autowired
+    @Resource
     NoticeInfoService noticeInfoService;
 
     @Operation(summary = "分页查询通知列表")

@@ -9,6 +9,7 @@ import com.qianlou.app.vo.room.RoomQueryVo;
 import com.qianlou.model.entity.RoomInfo;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public interface RoomInfoMapper extends BaseMapper<RoomInfo> {
 
@@ -18,6 +19,12 @@ public interface RoomInfoMapper extends BaseMapper<RoomInfo> {
 
     IPage<RoomItemVo> pageItemByApartmentId(Page<RoomItemVo> page, Long id);
 
-
     BigDecimal selectMinRentByApartmentId(Long id);
+    
+    /**
+     * 查询热门房间列表
+     * @param limit 限制条数
+     * @return 热门房间列表
+     */
+    List<RoomItemVo> selectHotRooms(int limit);
 }

@@ -6,8 +6,9 @@ import com.qianlou.app.mapper.NoticeInfoMapper;
 import com.qianlou.app.service.NoticeInfoService;
 import com.qianlou.app.vo.NoticeItemVo;
 import jakarta.annotation.Resource;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+@Service
 public class NoticeInfoServiceImpl implements NoticeInfoService {
 
     @Resource

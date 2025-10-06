@@ -227,4 +227,78 @@
           and apartment_id = #{id}
     </select>
 
+    <!-- 查询热门房间列表，基于浏览历史统计 -->
+    <select id="selectHotRooms" resultMap="RoomItemVoMap">
+        select 
+            ri.id,
+            ri.room_number,
+            ri.rent,
+            ri.apartment_id,
+            ri.is_release,
+            ai.id apart_id,
+            ai.name,
+            ai.introduction,
+            ai.district_id,
+            ai.district_name,
+            ai.city_id,
+            ai.city_name,
+            ai.province_id,
+            ai.province_name,
+            ai.address_detail,
+            ai.latitude,
+            ai.longitude,
+            ai.phone,
+            ai.is_release apart_is_release
+        from (
+
+            select 
+                room_id, 
+                count(*) as view_count 
+            from browsing_history 
+            where is_deleted = 0 
+
+            and browse_time >= date_sub(now(), interval 30 day)
+            group by room_id 
+            order by view_count desc 
+            limit #{limit}
+            
+            union all
+
+            select 
+                ri.id as room_id, 
+                0 as view_count 
+            from room_info ri
+            where ri.is_deleted = 0
+            and ri.is_release = 1
+            and ri.id not in (
+                select room_id
+                from lease_agreement
+                where is_deleted = 0
+                and status in (2,5)
+            )
+            and ri.id not in (
+                select room_id 
+                from browsing_history 
+                where is_deleted = 0 
+                and browse_time >= date_sub(now(), interval 30 day)
+            )
+            order by ri.id desc
+            limit #{limit}
+        ) as hot_rooms
+        left join room_info ri on hot_rooms.room_id = ri.id
+        left join apartment_info ai on ri.apartment_id = ai.id
+        where 
+            ri.is_deleted = 0
+            and ai.is_deleted = 0
+            and ri.is_release = 1
+            and ri.id not in (
+                select room_id
+                from lease_agreement
+                where is_deleted = 0
+                and status in (2,5)
+            )
+        order by hot_rooms.view_count desc, ri.id desc
+        limit #{limit}
+    </select>
+
 </mapper>
