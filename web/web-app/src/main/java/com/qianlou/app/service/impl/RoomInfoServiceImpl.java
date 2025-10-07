@@ -1,6 +1,5 @@
 package com.qianlou.app.service.impl;
 
-
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -95,11 +94,11 @@ public class RoomInfoServiceImpl extends ServiceImpl<RoomInfoMapper, RoomInfo>
             cachedResult = redisCacheUtil.getCacheList(cacheKey, Page.class, RoomItemVo.class);
         } catch (Exception e) {
             // 缓存获取失败时记录日志，继续从数据库查询
-            log.warn("从缓存获取公寓房间列表失败，将从数据库查询，缓存键: {}", cacheKey, e);
+            log.warn("Failed to get apartment room list from cache, will query from database, cache key: {}", cacheKey, e);
         }
         
         if (cachedResult != null) {
-            log.info("从缓存获取公寓房间列表，缓存键: {}", cacheKey);
+            log.info("Get apartment room list from cache, cache key: {}", cacheKey);
             return cachedResult;
         }
         
@@ -109,10 +108,10 @@ public class RoomInfoServiceImpl extends ServiceImpl<RoomInfoMapper, RoomInfo>
         // 存入缓存
         try {
             redisCacheUtil.setCache(cacheKey, result, ROOM_LIST_CACHE_TTL, TimeUnit.MINUTES);
-            log.info("房间列表存入缓存，缓存键: {}", cacheKey);
+            log.info("Room list stored in cache, cache key: {}", cacheKey);
         } catch (Exception e) {
             // 缓存存储失败时只记录日志，不影响正常业务
-            log.warn("房间列表存入缓存失败，缓存键: {}", cacheKey, e);
+            log.warn("Failed to store room list in cache, cache key: {}", cacheKey, e);
         }
         
         return result;
@@ -139,12 +138,12 @@ public class RoomInfoServiceImpl extends ServiceImpl<RoomInfoMapper, RoomInfo>
         // 尝试从缓存获取数据
         RoomDetailVo cachedDetail = redisCacheUtil.getCache(cacheKey, RoomDetailVo.class);
         if (cachedDetail != null) {
-            log.info("从缓存获取房间详情，房间ID: {}, 缓存键: {}", id, cacheKey);
+            log.info("Get room detail from cache, room ID: {}, cache key: {}", id, cacheKey);
             return cachedDetail;
         }
         
         // 缓存未命中，从数据库查询
-        log.info("缓存未命中，从数据库查询房间详情，房间ID: {}", id);
+        log.info("Cache miss, query room detail from database, room ID: {}", id);
         
         //1.查询RoomInfo - 根据ID获取房间基本信息
         RoomInfo roomInfo = roomInfoMapper.selectRoomById(id);
@@ -200,7 +199,7 @@ public class RoomInfoServiceImpl extends ServiceImpl<RoomInfoMapper, RoomInfo>
 
         // 存入缓存
         redisCacheUtil.setCache(cacheKey, appRoomDetailVo, ROOM_DETAIL_CACHE_TTL, TimeUnit.MINUTES);
-        log.info("房间详情存入缓存，房间ID: {}, 缓存键: {}", id, cacheKey);
+        log.info("Room detail stored in cache, room ID: {}, cache key: {}", id, cacheKey);
 
         //保存用户浏览历史记录
         browsingHistoryService.saveBrowsingHistory(LoginUserContext.getLoginUser().getUserId(), id);
@@ -217,9 +216,9 @@ public class RoomInfoServiceImpl extends ServiceImpl<RoomInfoMapper, RoomInfo>
         String cacheKey = ROOM_DETAIL_CACHE_KEY + roomId;
         boolean deleted = redisCacheUtil.deleteCache(cacheKey);
         if (deleted) {
-            log.info("清除房间详情缓存成功，房间ID: {}, 缓存键: {}", roomId, cacheKey);
+            log.info("Room detail cache cleared successfully, room ID: {}, cache key: {}", roomId, cacheKey);
         } else {
-            log.info("清除房间详情缓存失败或缓存不存在，房间ID: {}, 缓存键: {}", roomId, cacheKey);
+            log.info("Failed to clear room detail cache or cache does not exist, room ID: {}, cache key: {}", roomId, cacheKey);
         }
     }
     
@@ -230,7 +229,7 @@ public class RoomInfoServiceImpl extends ServiceImpl<RoomInfoMapper, RoomInfo>
     public void clearApartmentRoomListCache(Long apartmentId) {
         // 实际应用中可能需要使用Redis的keys或scan命令模糊匹配删除
         // 这里简化处理，记录日志提示
-        log.info("建议清除公寓房间列表缓存，公寓ID: {}", apartmentId);
+        log.info("Suggest to clear apartment room list cache, apartment ID: {}", apartmentId);
     }
     
     /**
@@ -247,26 +246,27 @@ public class RoomInfoServiceImpl extends ServiceImpl<RoomInfoMapper, RoomInfo>
             // 尝试从缓存获取数据
             List<RoomItemVo> cachedHotRooms = redisCacheUtil.getCacheList(cacheKey, RoomItemVo.class);
             if (cachedHotRooms != null) {
-                log.info("从缓存获取热门房间列表，限制条数: {}, 缓存键: {}", limit, cacheKey);
+                log.info("Get hot rooms list from cache, limit: {}, cache key: {}", limit, cacheKey);
                 return cachedHotRooms;
             }
         } catch (Exception e) {
-            log.error("获取热门房间缓存异常，错误信息: {}", e.getMessage());
+            log.error("Exception when getting hot rooms cache, error message: {}", e.getMessage(), e);
             // 缓存异常时继续从数据库查询
         }
         
         // 缓存未命中或缓存异常，从数据库查询
-        log.info("缓存未命中或异常，从数据库查询热门房间列表，限制条数: {}", limit);
+        log.info("Cache miss or exception, query hot rooms list from database, limit: {}", limit);
         List<RoomItemVo> hotRooms = roomInfoMapper.selectHotRooms(limit);
         
-        // 存入缓存（永不过期）
+        // 存入缓存（设置过期时间）
         if (hotRooms != null && !hotRooms.isEmpty()) {
             try {
-                // 使用redisTemplate直接设置缓存，不指定过期时间即永不过期
-                redisTemplate.opsForValue().set(cacheKey, hotRooms);
-                log.info("热门房间列表存入缓存（永不过期），限制条数: {}, 缓存键: {}", limit, cacheKey);
+                // 使用redisCacheUtil设置缓存，并指定过期时间
+                redisCacheUtil.setCache(cacheKey, hotRooms, HOT_ROOMS_CACHE_TTL, TimeUnit.MINUTES);
+                log.info("Hot rooms list stored in cache with TTL: {} minutes, limit: {}, cache key: {}", 
+                         HOT_ROOMS_CACHE_TTL, limit, cacheKey);
             } catch (Exception e) {
-                log.error("热门房间列表存入缓存异常，错误信息: {}", e.getMessage());
+                log.error("Exception when storing hot rooms list in cache, error message: {}", e.getMessage(), e);
                 // 缓存存储异常不影响业务流程
             }
         }
@@ -285,7 +285,7 @@ public class RoomInfoServiceImpl extends ServiceImpl<RoomInfoMapper, RoomInfo>
         
         // 清除热门房间缓存（所有限制条数的版本）
         // 这里简化处理，记录日志提示
-        log.info("建议清除热门房间缓存，受影响的房间ID: {}", roomId);
+        log.info("Suggest to clear hot rooms cache, affected room ID: {}", roomId);
     }
     
     /**

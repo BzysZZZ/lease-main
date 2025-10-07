@@ -27,7 +27,7 @@ public class BrowsingHistoryServiceImpl extends ServiceImpl<BrowsingHistoryMappe
     @Override
     @Async
     public void saveBrowsingHistory(Long userId, Long roomId) {
-        log.info("保存浏览历史");
+        log.info("Save browsing history");
         BrowsingHistory browsingHistory = new BrowsingHistory();
         browsingHistory.setUserId(userId);
         browsingHistory.setRoomId(roomId);

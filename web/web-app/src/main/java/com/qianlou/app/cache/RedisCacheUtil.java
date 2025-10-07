@@ -9,6 +9,7 @@ import org.glassfish.jaxb.core.v2.TODO;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -61,7 +62,6 @@ public class RedisCacheUtil{
      * @param <T> 返回类型
      * @return 缓存的对象
      */
-    // TODO:该方法实现从Redis缓存中获取泛型集合类型的对象，方法有问题待修复，无法从redis中获取到正确的集合类型
     public <T> T getCacheList(String key, Class<?> collectionClass, Class<?>... elementClasses) {
         Object value = redisTemplate.opsForValue().get(key);
         try {
@@ -70,13 +70,32 @@ public class RedisCacheUtil{
             }
             JavaType javaType = objectMapper.getTypeFactory().constructParametricType(collectionClass, elementClasses);
             if (value instanceof String) {
+                // 如果是字符串类型，直接解析
                 return objectMapper.readValue((String) value, javaType);
+            } else if (collectionClass.isInstance(value)) {
+                // 如果对象类型匹配，直接返回
+                @SuppressWarnings("unchecked")
+                T result = (T) value;
+                return result;
+            } else {
+                // 其他情况，先转为JSON字符串再解析
+                String jsonString = objectMapper.writeValueAsString(value);
+                return objectMapper.readValue(jsonString, javaType);
             }
-            String jsonString = objectMapper.writeValueAsString(value);
-            return objectMapper.readValue(jsonString, javaType);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Json解析错误", e);
         }
+    }
+    
+    /**
+     * 获取List类型缓存的简化方法
+     * @param key 缓存键
+     * @param elementClass 元素类型
+     * @param <T> 元素类型
+     * @return List<T>类型的缓存对象
+     */
+    public <T> List<T> getCacheList(String key, Class<T> elementClass) {
+        return getCacheList(key, List.class, elementClass);
     }
 
     public boolean deleteCache(String key) {

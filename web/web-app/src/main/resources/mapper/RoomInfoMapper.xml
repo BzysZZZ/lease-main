@@ -250,21 +250,19 @@
             ai.phone,
             ai.is_release apart_is_release
         from (
-
-            select 
+            (select 
                 room_id, 
                 count(*) as view_count 
             from browsing_history 
             where is_deleted = 0 
-
             and browse_time >= date_sub(now(), interval 30 day)
             group by room_id 
             order by view_count desc 
-            limit #{limit}
+            limit #{limit})
             
             union all
 
-            select 
+            (select 
                 ri.id as room_id, 
                 0 as view_count 
             from room_info ri
@@ -283,7 +281,7 @@
                 and browse_time >= date_sub(now(), interval 30 day)
             )
             order by ri.id desc
-            limit #{limit}
+            limit #{limit})
         ) as hot_rooms
         left join room_info ri on hot_rooms.room_id = ri.id
         left join apartment_info ai on ri.apartment_id = ai.id

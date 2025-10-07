@@ -26,7 +26,7 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         Long userId = claims.get("userId", Long.class);
         String username = claims.get("username", String.class);
         LoginUserContext.setLoginUser(new LoginUser(userId, username));
-        log.info("存放");
+        log.info("User context set");
         return true;
     }
 
