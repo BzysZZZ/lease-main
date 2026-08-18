@@ -24,6 +24,7 @@ public class LoginController {
     @GetMapping("login/captcha")
     public Result<CaptchaVo> getCaptcha() {
         CaptchaVo captcha = loginService.getCaptcha();
+
         return Result.ok(captcha);
     }
 
